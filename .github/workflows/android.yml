@@ -55,8 +55,8 @@ jobs:
         with: 
           image: shraddhaPathak/my-note-app-image 
           registry: docker.io 
-          username: ${{ secrets.shraddhapathakrsl }} 
-          password: ${{ secrets.shri@9142 }}
+          username: ${{ secrets.DOCKER_USERNAME }} 
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
 
 
