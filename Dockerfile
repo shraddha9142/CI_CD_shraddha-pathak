@@ -7,7 +7,7 @@ ENV SDK_URL="https://dl.google.com/android/repository/sdk-tools-linux-3859397.zi
 
 # Download Android SDK
 RUN mkdir "$ANDROID_HOME" .android \
-    && cd "$ANDROID_HOME" \ Raja Software Labs Confidential 8
+    && cd "$ANDROID_HOME" \
     && curl -o sdk.zip $SDK_URL \
     && unzip sdk.zip \
     && rm sdk.zip \
