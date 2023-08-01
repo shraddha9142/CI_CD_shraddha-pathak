@@ -1,4 +1,4 @@
-package com.example.CI_CD
+package com.example.myapplication
 
 import org.junit.Test
 
