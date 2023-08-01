@@ -1,11 +1,13 @@
+
+buildscript {
+    apply from: '../jacoco.gradle'
+}
+
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
 }
 
-buildscript {
-    apply from: '../jacoco.gradle'
-}
 android {
     namespace 'com.example.myapplication'
     compileSdk 33
