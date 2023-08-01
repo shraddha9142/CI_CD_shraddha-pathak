@@ -83,7 +83,7 @@ jobs:
           distribution: 'temurin'
           cache: gradle
       - name: Grant execute permission for gradlew
-        run: chmod +x gra
+        run: chmod +x gradlew
       - name: Builddlew
         run: ./gradlew build
       - name: Run Tests
