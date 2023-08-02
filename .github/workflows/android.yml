@@ -25,26 +25,27 @@ jobs:
     - name: Build with Gradle
       run: ./gradlew build
       
-#   test: 
-#     runs-on: ubuntu-latest 
-#     steps: 
-#     - uses: actions/checkout@v3 
-#     - name: set up JDK 17 
-#       uses: actions/setup-java@v3 
-#       with: 
-#         java-version: '17' 
-#         distribution: 'temurin'
-#         cache: gradle 
-#     - name: Grant execute permission for gradlew 
-#       run: chmod +x gradlew 
-#     - name: Run Linter and Test 
-#       run: ./gradlew check 
-#     - name: Upload Reports 
-#       uses: actions/upload-artifact@v2 
-#       with: 
-#         name: Test-Reports 
-#         path: app/build/reports 
-#       if: always()
+  test: 
+    needs: build
+    runs-on: ubuntu-latest 
+    steps: 
+    - uses: actions/checkout@v3 
+    - name: set up JDK 17 
+      uses: actions/setup-java@v3 
+      with: 
+        java-version: '17' 
+        distribution: 'temurin'
+        cache: gradle 
+    - name: Grant execute permission for gradlew 
+      run: chmod +x gradlew 
+    - name: Run Linter and Test 
+      run: ./gradlew check 
+    - name: Upload Reports 
+      uses: actions/upload-artifact@v2 
+      with: 
+        name: Test-Reports 
+        path: app/build/reports 
+      if: always()
 
 
 #   run-ui-tests:
@@ -102,6 +103,7 @@ jobs:
           path: app/build/reports/jacoco/testDebugUnitTestCoverage/html
 
   publish:
+    needs: [build, test]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -196,17 +198,17 @@ jobs:
           run: diffuse diff app/build/outputs/apk/debug/app-master/app-master.apk app/build/outputs/apk/debug/app-pr/app-pr.apk
 
 
-#   deploy: 
-#     runs-on: ubuntu-latest 
-#     steps: 
-#       - uses: actions/checkout@v3 
-#       - name: Docker Build & Push Action 
-#         uses: mr-smithers-excellent/docker-build-push@v6.2 
-#         with: 
-#           image: shraddhapathakrsl/my-note-app-image 
-#           registry: docker.io 
-#           username: ${{ secrets.DOCKER_USERNAME }} 
-#           password: ${{ secrets.DOCKER_PASSWORD }}
+  deploy: 
+    runs-on: ubuntu-latest 
+    steps: 
+      - uses: actions/checkout@v3 
+      - name: Docker Build & Push Action 
+        uses: mr-smithers-excellent/docker-build-push@v6.2 
+        with: 
+          image: shraddhapathakrsl/my-note-app-image 
+          registry: docker.io 
+          username: ${{ secrets.DOCKER_USERNAME }} 
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
 
 
