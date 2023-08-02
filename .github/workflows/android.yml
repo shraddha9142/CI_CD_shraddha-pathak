@@ -25,26 +25,27 @@ jobs:
     - name: Build with Gradle
       run: ./gradlew build
       
-#   test: 
-#     runs-on: ubuntu-latest 
-#     steps: 
-#     - uses: actions/checkout@v3 
-#     - name: set up JDK 17 
-#       uses: actions/setup-java@v3 
-#       with: 
-#         java-version: '17' 
-#         distribution: 'temurin'
-#         cache: gradle 
-#     - name: Grant execute permission for gradlew 
-#       run: chmod +x gradlew 
-#     - name: Run Linter and Test 
-#       run: ./gradlew check 
-#     - name: Upload Reports 
-#       uses: actions/upload-artifact@v2 
-#       with: 
-#         name: Test-Reports 
-#         path: app/build/reports 
-#       if: always()
+  test: 
+    needs: build
+    runs-on: ubuntu-latest 
+    steps: 
+    - uses: actions/checkout@v3 
+    - name: set up JDK 17 
+      uses: actions/setup-java@v3 
+      with: 
+        java-version: '17' 
+        distribution: 'temurin'
+        cache: gradle 
+    - name: Grant execute permission for gradlew 
+      run: chmod +x gradlew 
+    - name: Run Linter and Test 
+      run: ./gradlew check 
+    - name: Upload Reports 
+      uses: actions/upload-artifact@v2 
+      with: 
+        name: Test-Reports 
+        path: app/build/reports 
+      if: always()
 
 
 #   run-ui-tests:
@@ -102,6 +103,7 @@ jobs:
           path: app/build/reports/jacoco/testDebugUnitTestCoverage/html
 
   publish:
+    needs: [build, test]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -130,19 +132,83 @@ jobs:
       - name: Do something with your bumped release version
         run: echo ${{ steps.bump_version.outputs.next-version }}  # will print 2.12.0
 
+    # Checkout main branch and build the APK  
+  build-main:
+    runs-on: macOS-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+       ref: main
+    - name: set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+    - name: Build Master APK
+      run: ./gradlew assembleDebug && mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/app-master.apk
+    - name: Upload APK
+      uses: actions/upload-artifact@v1
+      with:
+        name: apk_master
+        path: app/build/outputs/apk/debug/app-master.apk
+
+      # Checkout PR branch and build the APK
+  build-pr:
+        runs-on: macOS-latest
+        needs: build-main
+        steps:
+        - uses: actions/checkout@v3
+        - name: set up JDK 17
+          uses: actions/setup-java@v3
+          with:
+            java-version: '17'
+            distribution: 'temurin'
+            cache: gradle
+        - name: Grant execute permission for gradlew
+          run: chmod +x gradlew
+        - name: Build PR APK
+          run: ./gradlew assembleDebug && mv app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/app-pr.apk
+        - name: Upload APK
+          uses: actions/upload-artifact@v1
+          with:
+            name: apk_pr
+            path: app/build/outputs/apk/debug/app-pr.apk
+        
+  apk-diff:
+      needs: [build-main, build-pr]
+      runs-on: macOS-latest
+      steps:
+        - uses: actions/checkout@v1
+        - name: Install diffuse
+          run: brew install JakeWharton/repo/diffuse
+        - name: download artifact
+          uses: actions/download-artifact@v2.1.1  
+          with:
+              name: apk_master
+              path: app/build/outputs/apk/debug/app-master
+        - name: download artifact
+          uses: actions/download-artifact@v2.1.1
+          with:
+              name: apk_pr
+              path: app/build/outputs/apk/debug/app-pr
+        - name: run differ
+          run: diffuse diff app/build/outputs/apk/debug/app-master/app-master.apk app/build/outputs/apk/debug/app-pr/app-pr.apk
 
 
-#   deploy: 
-#     runs-on: ubuntu-latest 
-#     steps: 
-#       - uses: actions/checkout@v3 
-#       - name: Docker Build & Push Action 
-#         uses: mr-smithers-excellent/docker-build-push@v6.2 
-#         with: 
-#           image: shraddhapathakrsl/my-note-app-image 
-#           registry: docker.io 
-#           username: ${{ secrets.DOCKER_USERNAME }} 
-#           password: ${{ secrets.DOCKER_PASSWORD }}
+  deploy: 
+    runs-on: ubuntu-latest 
+    steps: 
+      - uses: actions/checkout@v3 
+      - name: Docker Build & Push Action 
+        uses: mr-smithers-excellent/docker-build-push@v6.2 
+        with: 
+          image: shraddhapathakrsl/ci_cd_pipeline-{{ steps.bump_version.outputs.next-version }}
+          registry: docker.io 
+          username: ${{ secrets.DOCKER_USERNAME }} 
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
 
 
