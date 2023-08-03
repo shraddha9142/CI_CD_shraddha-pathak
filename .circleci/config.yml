@@ -19,6 +19,10 @@ jobs:
     executor:
       name: android/android-machine
 
+
+    docker:
+      - image: cimg/android:2038.08
+
     # Add steps to the job
     # See: https://circleci.com/docs/configuration-reference/#steps
     steps:
