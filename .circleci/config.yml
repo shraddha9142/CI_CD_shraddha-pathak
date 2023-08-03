@@ -16,10 +16,7 @@ jobs:
   build-and-test:
     # These next lines define the Android machine image executor.
     # See: https://circleci.com/docs/executor-types/
-    executor:
-      name: android/android-machine
-
-
+  
     docker:
       - image: cimg/android:2038.08
 
